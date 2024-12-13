@@ -1,0 +1,42 @@
+
+name: FTP Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Set up FTP deployment
+    - name: Deploy files via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./
+
+    # Update VERSION.txt with commit information
+    - name: Update VERSION.txt
+      run: |
+        echo "Branch: ${{ github.ref_name }}" > VERSION.txt
+        echo "Commit: ${{ github.sha }}" >> VERSION.txt
+        echo "Date: $(date -u)" >> VERSION.txt
+
+    # Upload VERSION.txt to the server
+    - name: Upload VERSION.txt
+      uses: SamKirkland/FTP-Deploy-Action@v4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./VERSION.txt
+        remote-dir: ./
